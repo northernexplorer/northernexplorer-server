@@ -1,0 +1,36 @@
+DROP TABLE IF EXISTS weather_cache;
+CREATE TABLE weather_cache (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lat DECIMAL(10, 6) NOT NULL,
+    lon DECIMAL(10, 6) NOT NULL,
+    weather_data LONGTEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_location (lat, lon)
+);
+
+DROP TABLE IF EXISTS forecast_cache;
+CREATE TABLE IF NOT EXISTS forecast_cache (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lat DECIMAL(10, 6) NOT NULL,
+    lon DECIMAL(10, 6) NOT NULL,
+    forecast_data LONGTEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_forecast_location (lat, lon)
+);
+
+DROP TABLE IF EXISTS city_cache;
+CREATE TABLE IF NOT EXISTS city_cache (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    lat DECIMAL(10, 6) NOT NULL,
+    lon DECIMAL(10, 6) NOT NULL,
+    city_data LONGTEXT NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_city_location (lat, lon)
+);
+
+ALTER TABLE city_cache
+    CONVERT TO CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+ALTER TABLE city_cache
+    MODIFY COLUMN city_data LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
