@@ -34,3 +34,13 @@ ALTER TABLE city_cache
 
 ALTER TABLE city_cache
     MODIFY COLUMN city_data LONGTEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL;
+
+DROP TABLE IF EXISTS quote_cache;
+CREATE TABLE IF NOT EXISTS quote_cache (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   quote_text TEXT NOT NULL UNIQUE,
+   author VARCHAR(255) DEFAULT 'Unknown',
+    usage_count INT DEFAULT 1,
+    assigned_date DATE NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

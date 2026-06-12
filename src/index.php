@@ -35,13 +35,13 @@ $lat = isset($_GET['lat']) ? filter_var($_GET['lat'], FILTER_VALIDATE_FLOAT) : n
 $lon = isset($_GET['lon']) ? filter_var($_GET['lon'], FILTER_VALIDATE_FLOAT) : null;
 $type = isset($_GET['type']) ? trim($_GET['type']) : null;
 
-// 1. First validate the endpoint type parameter
-$allowedTypes = ['weather', 'forecast', 'city', 'lunar'];
+// 1. First validate the endpoint type parameter (added 'quote')
+$allowedTypes = ['weather', 'forecast', 'city', 'lunar', 'quote'];
 if ($type === null || !in_array($type, $allowedTypes, true)) {
     http_response_code(400);
     echo json_encode([
         "error" => "Invalid or missing 'type' parameter.",
-        "expected" => "The 'type' query parameter must be explicitly set to 'weather', 'forecast', 'city', or 'lunar'."
+        "expected" => "The 'type' query parameter must be explicitly set to 'weather', 'forecast', 'city', 'lunar', or 'quote'."
     ]);
     exit();
 }
@@ -50,7 +50,7 @@ if ($type === null || !in_array($type, $allowedTypes, true)) {
 if ($type === 'weather' || $type === 'forecast' || $type === 'city') {
     if ($lat === false || $lon === false || $lat === null || $lon === null) {
         http_response_code(400);
-        echo json_encode(["error" => "Valid latitude (lat) and longitude (lon) query parameters are required for weather and forecast types."]);
+        echo json_encode(["error" => "Valid latitude (lat) and longitude (lon) query parameters are required for weather, forecast, and city types."]);
         exit();
     }
 }
@@ -65,6 +65,9 @@ try {
     } elseif ($type === 'city') {
         require_once 'endpoints/city_cache.php';
         $response = getCityData($lat, $lon);
+    } elseif ($type === 'quote') {
+        require_once 'endpoints/quote_cache.php';
+        $response = getQuoteData();
     } else {
         require_once 'endpoints/lunar.php';
         $response = getLunarData();
