@@ -1,8 +1,9 @@
 <?php
-// Clear out these debug lines later once everything tests perfectly
+/* These are for debugging
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
+*/
 
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, OPTIONS");
@@ -14,8 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// 1. Load the shared environment core
-require_once 'weather_cache.php';
+require_once 'lib/env_loader.php';
 
 try {
     loadEnv(__DIR__ . '/.env');
@@ -35,33 +35,39 @@ $lat = isset($_GET['lat']) ? filter_var($_GET['lat'], FILTER_VALIDATE_FLOAT) : n
 $lon = isset($_GET['lon']) ? filter_var($_GET['lon'], FILTER_VALIDATE_FLOAT) : null;
 $type = isset($_GET['type']) ? trim($_GET['type']) : null;
 
-if ($lat === false || $lon === false || $lat === null || $lon === null) {
-    http_response_code(400);
-    echo json_encode(["error" => "Valid latitude (lat) and longitude (lon) query parameters are required."]);
-    exit();
-}
-
-// 2. Added 'city' to the server-side gatekeeper array here
-$allowedTypes = ['weather', 'forecast', 'city'];
+// 1. First validate the endpoint type parameter
+$allowedTypes = ['weather', 'forecast', 'city', 'lunar'];
 if ($type === null || !in_array($type, $allowedTypes, true)) {
     http_response_code(400);
     echo json_encode([
         "error" => "Invalid or missing 'type' parameter.",
-        "expected" => "The 'type' query parameter must be explicitly set to 'weather', 'forecast', or 'city'."
+        "expected" => "The 'type' query parameter must be explicitly set to 'weather', 'forecast', 'city', or 'lunar'."
     ]);
     exit();
 }
 
+// 2. NOW safely enforce coordinates ONLY if the request requires them upfront
+if ($type === 'weather' || $type === 'forecast' || $type === 'city') {
+    if ($lat === false || $lon === false || $lat === null || $lon === null) {
+        http_response_code(400);
+        echo json_encode(["error" => "Valid latitude (lat) and longitude (lon) query parameters are required for weather and forecast types."]);
+        exit();
+    }
+}
+
 try {
     if ($type === 'weather') {
+        require_once 'endpoints/weather_cache.php';
         $response = getWeatherData($lat, $lon);
     } elseif ($type === 'forecast') {
-        require_once 'forecast_cache.php';
+        require_once 'endpoints/forecast_cache.php';
         $response = getForecastData($lat, $lon);
-    } else {
-        // 3. Dynamically route requests when type=city
-        require_once 'city_cache.php';
+    } elseif ($type === 'city') {
+        require_once 'endpoints/city_cache.php';
         $response = getCityData($lat, $lon);
+    } else {
+        require_once 'endpoints/lunar.php';
+        $response = getLunarData();
     }
 
     echo json_encode($response);
